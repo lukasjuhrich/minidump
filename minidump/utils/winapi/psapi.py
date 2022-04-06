@@ -1,4 +1,3 @@
-
 from minidump.utils.winapi.defines import *
 
 
@@ -9,10 +8,12 @@ from minidump.utils.winapi.defines import *
 # } MODULEINFO, *LPMODULEINFO;
 class MODULEINFO(Structure):
     _fields_ = [
-        ("lpBaseOfDll",     LPVOID),    # remote pointer
-        ("SizeOfImage",     DWORD),
-        ("EntryPoint",      LPVOID),    # remote pointer
-]
+        ("lpBaseOfDll", LPVOID),  # remote pointer
+        ("SizeOfImage", DWORD),
+        ("EntryPoint", LPVOID),  # remote pointer
+    ]
+
+
 LPMODULEINFO = POINTER(MODULEINFO)
 
 # BOOL WINAPI EnumProcessModules(
@@ -37,16 +38,17 @@ def EnumProcessModules(hProcess):
         if needed <= size:
             break
         size = needed
-    return [ lphModule[index] for index in range(0, int(needed // unit)) ]
+    return [lphModule[index] for index in range(0, int(needed // unit))]
 
-def GetModuleFileNameExW(hProcess, hModule = None):
+
+def GetModuleFileNameExW(hProcess, hModule=None):
     _GetModuleFileNameExW = ctypes.windll.psapi.GetModuleFileNameExW
     _GetModuleFileNameExW.argtypes = [HANDLE, HMODULE, LPWSTR, DWORD]
     _GetModuleFileNameExW.restype = DWORD
 
     nSize = MAX_PATH
     while 1:
-        lpFilename = ctypes.create_unicode_buffer(u"", nSize)
+        lpFilename = ctypes.create_unicode_buffer("", nSize)
         nCopied = _GetModuleFileNameExW(hProcess, hModule, lpFilename, nSize)
         if nCopied == 0:
             raise ctypes.WinError()
@@ -55,13 +57,14 @@ def GetModuleFileNameExW(hProcess, hModule = None):
         nSize = nSize + MAX_PATH
     return lpFilename.value
 
+
 # BOOL WINAPI GetModuleInformation(
 #   __in   HANDLE hProcess,
 #   __in   HMODULE hModule,
 #   __out  LPMODULEINFO lpmodinfo,
 #   __in   DWORD cb
 # );
-def GetModuleInformation(hProcess, hModule, lpmodinfo = None):
+def GetModuleInformation(hProcess, hModule, lpmodinfo=None):
     _GetModuleInformation = windll.psapi.GetModuleInformation
     _GetModuleInformation.argtypes = [HANDLE, HMODULE, LPMODULEINFO, DWORD]
     _GetModuleInformation.restype = bool

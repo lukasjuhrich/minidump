@@ -13,32 +13,35 @@ from ctypes import wintypes
 GetCurrentProcess = ctypes.windll.kernel32.GetCurrentProcess
 GetCurrentProcess.restype = wintypes.HANDLE
 OpenProcessToken = ctypes.windll.advapi32.OpenProcessToken
-OpenProcessToken.argtypes = (wintypes.HANDLE, wintypes.DWORD,
-                             ctypes.POINTER(wintypes.HANDLE))
+OpenProcessToken.argtypes = (
+    wintypes.HANDLE,
+    wintypes.DWORD,
+    ctypes.POINTER(wintypes.HANDLE),
+)
 OpenProcessToken.restype = wintypes.BOOL
+
 
 class LUID(ctypes.Structure):
     _fields_ = [
-            ('low_part', wintypes.DWORD),
-            ('high_part', wintypes.LONG),
-            ]
+        ("low_part", wintypes.DWORD),
+        ("high_part", wintypes.LONG),
+    ]
 
     def __eq__(self, other):
-        return (
-                self.high_part == other.high_part and
-                self.low_part == other.low_part
-                )
+        return self.high_part == other.high_part and self.low_part == other.low_part
 
     def __ne__(self, other):
-        return not (self==other)
+        return not (self == other)
+
 
 LookupPrivilegeValue = ctypes.windll.advapi32.LookupPrivilegeValueW
 LookupPrivilegeValue.argtypes = (
-        wintypes.LPWSTR, # system name
-        wintypes.LPWSTR, # name
-        ctypes.POINTER(LUID),
-        )
+    wintypes.LPWSTR,  # system name
+    wintypes.LPWSTR,  # name
+    ctypes.POINTER(LUID),
+)
 LookupPrivilegeValue.restype = wintypes.BOOL
+
 
 class TOKEN_INFORMATION_CLASS:
     TokenUser = 1
@@ -46,16 +49,18 @@ class TOKEN_INFORMATION_CLASS:
     TokenPrivileges = 3
     # ... see http://msdn.microsoft.com/en-us/library/aa379626%28VS.85%29.aspx
 
-SE_PRIVILEGE_ENABLED_BY_DEFAULT = (0x00000001)
-SE_PRIVILEGE_ENABLED            = (0x00000002)
-SE_PRIVILEGE_REMOVED            = (0x00000004)
-SE_PRIVILEGE_USED_FOR_ACCESS    = (0x80000000)
+
+SE_PRIVILEGE_ENABLED_BY_DEFAULT = 0x00000001
+SE_PRIVILEGE_ENABLED = 0x00000002
+SE_PRIVILEGE_REMOVED = 0x00000004
+SE_PRIVILEGE_USED_FOR_ACCESS = 0x80000000
+
 
 class LUID_AND_ATTRIBUTES(ctypes.Structure):
     _fields_ = [
-            ('LUID', LUID),
-            ('attributes', wintypes.DWORD),
-            ]
+        ("LUID", LUID),
+        ("attributes", wintypes.DWORD),
+    ]
 
     def is_enabled(self):
         return bool(self.attributes & SE_PRIVILEGE_ENABLED)
@@ -69,77 +74,81 @@ class LUID_AND_ATTRIBUTES(ctypes.Structure):
         res = LookupPrivilegeName(None, self.LUID, buf, size)
         if res == 0:
             raise RuntimeError
-        return buf[:size.value]
+        return buf[: size.value]
 
     def __str__(self):
         name = self.name
-        fmt = ['{name}', '{name} (enabled)'][self.is_enabled()]
+        fmt = ["{name}", "{name} (enabled)"][self.is_enabled()]
         return fmt.format(**vars())
+
 
 LookupPrivilegeName = ctypes.windll.advapi32.LookupPrivilegeNameW
 LookupPrivilegeName.argtypes = (
-        wintypes.LPWSTR, # lpSystemName
-        ctypes.POINTER(LUID), # lpLuid
-        wintypes.LPWSTR, # lpName
-        ctypes.POINTER(wintypes.DWORD), #cchName
-        )
+    wintypes.LPWSTR,  # lpSystemName
+    ctypes.POINTER(LUID),  # lpLuid
+    wintypes.LPWSTR,  # lpName
+    ctypes.POINTER(wintypes.DWORD),  # cchName
+)
 LookupPrivilegeName.restype = wintypes.BOOL
+
 
 class TOKEN_PRIVILEGES(ctypes.Structure):
     _fields_ = [
-            ('count', wintypes.DWORD),
-            ('privileges', LUID_AND_ATTRIBUTES*0),
-            ]
+        ("count", wintypes.DWORD),
+        ("privileges", LUID_AND_ATTRIBUTES * 0),
+    ]
 
     def get_array(self):
-        array_type = LUID_AND_ATTRIBUTES*self.count
-        privileges = ctypes.cast(self.privileges,
-                                 ctypes.POINTER(array_type)).contents
+        array_type = LUID_AND_ATTRIBUTES * self.count
+        privileges = ctypes.cast(self.privileges, ctypes.POINTER(array_type)).contents
         return privileges
 
     def __iter__(self):
         return iter(self.get_array())
 
+
 PTOKEN_PRIVILEGES = ctypes.POINTER(TOKEN_PRIVILEGES)
 
 GetTokenInformation = ctypes.windll.advapi32.GetTokenInformation
 GetTokenInformation.argtypes = [
-        wintypes.HANDLE, # TokenHandle
-        ctypes.c_uint, # TOKEN_INFORMATION_CLASS value
-        ctypes.c_void_p, # TokenInformation
-        wintypes.DWORD, # TokenInformationLength
-        ctypes.POINTER(wintypes.DWORD), # ReturnLength
-        ]
+    wintypes.HANDLE,  # TokenHandle
+    ctypes.c_uint,  # TOKEN_INFORMATION_CLASS value
+    ctypes.c_void_p,  # TokenInformation
+    wintypes.DWORD,  # TokenInformationLength
+    ctypes.POINTER(wintypes.DWORD),  # ReturnLength
+]
 GetTokenInformation.restype = wintypes.BOOL
 
 # http://msdn.microsoft.com/en-us/library/aa375202%28VS.85%29.aspx
 AdjustTokenPrivileges = ctypes.windll.advapi32.AdjustTokenPrivileges
 AdjustTokenPrivileges.restype = wintypes.BOOL
 AdjustTokenPrivileges.argtypes = [
-        wintypes.HANDLE,                # TokenHandle
-        wintypes.BOOL,                  # DisableAllPrivileges
-        PTOKEN_PRIVILEGES,              # NewState (optional)
-        wintypes.DWORD,                 # BufferLength of PreviousState
-        PTOKEN_PRIVILEGES,              # PreviousState (out, optional)
-        ctypes.POINTER(wintypes.DWORD), # ReturnLength
-        ]
+    wintypes.HANDLE,  # TokenHandle
+    wintypes.BOOL,  # DisableAllPrivileges
+    PTOKEN_PRIVILEGES,  # NewState (optional)
+    wintypes.DWORD,  # BufferLength of PreviousState
+    PTOKEN_PRIVILEGES,  # PreviousState (out, optional)
+    ctypes.POINTER(wintypes.DWORD),  # ReturnLength
+]
+
 
 def get_process_token():
     "Get the current process token"
     token = wintypes.HANDLE()
-    TOKEN_ALL_ACCESS = 0xf01ff
+    TOKEN_ALL_ACCESS = 0xF01FF
     res = OpenProcessToken(GetCurrentProcess(), TOKEN_ALL_ACCESS, token)
     if not res > 0:
         raise RuntimeError("Couldn't get process token")
     return token
 
+
 def get_debug_luid():
     symlink_luid = LUID()
-    res = LookupPrivilegeValue(None, "SeDebugPrivilege",
-                               symlink_luid)
+    res = LookupPrivilegeValue(None, "SeDebugPrivilege", symlink_luid)
     if not res > 0:
         raise RuntimeError("Couldn't lookup privilege value")
     return symlink_luid
+
 
 def get_privilege_information():
     "Get all privileges associated with the current process."
@@ -147,12 +156,12 @@ def get_privilege_information():
 
     return_length = wintypes.DWORD()
     params = [
-            get_process_token(),
-            TOKEN_INFORMATION_CLASS.TokenPrivileges,
-            None,
-            0,
-            return_length,
-            ]
+        get_process_token(),
+        TOKEN_INFORMATION_CLASS.TokenPrivileges,
+        None,
+        0,
+        return_length,
+    ]
 
     res = GetTokenInformation(*params)
 
@@ -168,11 +177,13 @@ def get_privilege_information():
     privileges = ctypes.cast(buffer, ctypes.POINTER(TOKEN_PRIVILEGES)).contents
     return privileges
 
+
 def report_privilege_information():
     "Report all privilege information assigned to the current process."
     privileges = get_privilege_information()
     print("found {0} privileges".format(privileges.count))
     tuple(map(print, privileges))
+
 
 def enable_debug_privilege():
     """
