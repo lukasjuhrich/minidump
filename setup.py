@@ -31,11 +31,11 @@ setup(
     long_description="Python library to parse Windows minidump file format",
     # long_description=open("README.txt").read(),
     python_requires=">=3.6",
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-    ),
+    ],
     entry_points={
         "console_scripts": [
             "minidump = minidump.__main__:run",
