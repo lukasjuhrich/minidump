@@ -104,7 +104,7 @@ class MinidumpShell(cmd.Cmd):
         pos = self.reader.tell()
         current_segment_start = self.reader.current_segment.start_address
         segment_relative_position = pos - current_segment_start
-        self.prompt = "[%s %s+%s] " % (
+        self.prompt = "[{} {}+{}] ".format(
             hex(pos),
             hex(current_segment_start),
             hex(segment_relative_position),

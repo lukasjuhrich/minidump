@@ -5,7 +5,6 @@ create symlinks on Windows.
 # https://svn.python.org/projects/python/branches/pep-0384/Lib/test/symlink_support.py
 
 # allow script to run natively under python 2.6+
-from __future__ import print_function
 
 import ctypes
 from ctypes import wintypes
@@ -181,7 +180,7 @@ def get_privilege_information():
 def report_privilege_information():
     "Report all privilege information assigned to the current process."
     privileges = get_privilege_information()
-    print("found {0} privileges".format(privileges.count))
+    print(f"found {privileges.count} privileges")
     tuple(map(print, privileges))
 
 

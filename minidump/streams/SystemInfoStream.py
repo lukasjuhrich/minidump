@@ -213,7 +213,7 @@ class MINIDUMP_SYSTEM_INFO:
     def __str__(self):
         t = ""
         for k in self.__dict__:
-            t += "%s : %s\r\n" % (k, str(self.__dict__[k]))
+            t += f"{k} : {str(self.__dict__[k])}\r\n"
         return t
 
 

@@ -114,7 +114,7 @@ class MinidumpUnloadedModule:
                 self.memorysegments.append(segment)
 
     def __str__(self):
-        return "Unloaded Module name: %s Size: %s BaseAddress: %s" % (
+        return "Unloaded Module name: {} Size: {} BaseAddress: {}".format(
             self.name,
             hex(self.size),
             hex(self.baseaddress),

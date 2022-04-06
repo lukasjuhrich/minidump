@@ -93,8 +93,8 @@ class XMM_SAVE_AREA32:
         s = ""
         s += "%s: %x (%d)\n" % ("ControlWord", self.ControlWord, self.ControlWord)
         s += "%s: %x (%d)\n" % ("StatusWord", self.StatusWord, self.StatusWord)
-        s += "%s: %s\n" % ("TagWord", self.TagWord)
-        s += "%s: %s\n" % ("Reserved1", self.Reserved1)
+        s += "{}: {}\n".format("TagWord", self.TagWord)
+        s += "{}: {}\n".format("Reserved1", self.Reserved1)
         s += "%s: %x (%d)\n" % ("ErrorOpcode", self.ErrorOpcode, self.ErrorOpcode)
         s += "%s: %x (%d)\n" % ("ErrorOffset", self.ErrorOffset, self.ErrorOffset)
         s += "%s: %x (%d)\n" % ("ErrorSelector", self.ErrorSelector, self.ErrorSelector)
@@ -110,7 +110,7 @@ class XMM_SAVE_AREA32:
         s += "%s:\n" % ("XmmRegisters")
         for xreg in self.XmmRegisters:
             s += "\t%s" % (xreg)
-        s += "%s: %s\n" % ("Reserved4", "".join(self.Reserved4))
+        s += "{}: {}\n".format("Reserved4", "".join(self.Reserved4))
 
         return s
 
@@ -170,22 +170,22 @@ class CTX_DUMMYSTRUCTNAME:
         s += "%s:\n" % ("Legacy")
         for leg in self.Legacy:
             s += "\t%s" % (leg)
-        s += "%s: %s" % ("Xmm0", self.Xmm0)
-        s += "%s: %s" % ("Xmm1", self.Xmm1)
-        s += "%s: %s" % ("Xmm2", self.Xmm2)
-        s += "%s: %s" % ("Xmm3", self.Xmm3)
-        s += "%s: %s" % ("Xmm4", self.Xmm4)
-        s += "%s: %s" % ("Xmm5", self.Xmm5)
-        s += "%s: %s" % ("Xmm6", self.Xmm6)
-        s += "%s: %s" % ("Xmm7", self.Xmm7)
-        s += "%s: %s" % ("Xmm8", self.Xmm8)
-        s += "%s: %s" % ("Xmm9", self.Xmm9)
-        s += "%s: %s" % ("Xmm10", self.Xmm10)
-        s += "%s: %s" % ("Xmm11", self.Xmm11)
-        s += "%s: %s" % ("Xmm12", self.Xmm12)
-        s += "%s: %s" % ("Xmm13", self.Xmm13)
-        s += "%s: %s" % ("Xmm14", self.Xmm14)
-        s += "%s: %s" % ("Xmm15", self.Xmm15)
+        s += "{}: {}".format("Xmm0", self.Xmm0)
+        s += "{}: {}".format("Xmm1", self.Xmm1)
+        s += "{}: {}".format("Xmm2", self.Xmm2)
+        s += "{}: {}".format("Xmm3", self.Xmm3)
+        s += "{}: {}".format("Xmm4", self.Xmm4)
+        s += "{}: {}".format("Xmm5", self.Xmm5)
+        s += "{}: {}".format("Xmm6", self.Xmm6)
+        s += "{}: {}".format("Xmm7", self.Xmm7)
+        s += "{}: {}".format("Xmm8", self.Xmm8)
+        s += "{}: {}".format("Xmm9", self.Xmm9)
+        s += "{}: {}".format("Xmm10", self.Xmm10)
+        s += "{}: {}".format("Xmm11", self.Xmm11)
+        s += "{}: {}".format("Xmm12", self.Xmm12)
+        s += "{}: {}".format("Xmm13", self.Xmm13)
+        s += "{}: {}".format("Xmm14", self.Xmm14)
+        s += "{}: {}".format("Xmm15", self.Xmm15)
 
         return s
 
@@ -217,13 +217,13 @@ class CTX_DUMMYUNIONNAME:
 
     def __str__(self):
         s = ""
-        s += "%s: %s\n" % ("FltSave", self.FltSave)
+        s += "{}: {}\n".format("FltSave", self.FltSave)
         s += "%s:\n" % ("Q")
         for q in self.Q:
             s += "\t%s" % (q.__str__())
         for d in self.D:
             s += "\t%d" % (d)
-        s += "%s: %s" % ("DUMMYSTRUCTNAME", self.DUMMYSTRUCTNAME)
+        s += "{}: {}".format("DUMMYSTRUCTNAME", self.DUMMYSTRUCTNAME)
         s += "%s:\n" % ("S")
         for e in self.S:
             s += "\t%d" % (e)
@@ -591,7 +591,7 @@ class WOW64_CONTEXT:
         s += "%s: %x (%d)\n" % ("Dr3", self.Dr3, self.Dr3)
         s += "%s: %x (%d)\n" % ("Dr6", self.Dr6, self.Dr6)
         s += "%s: %x (%d)\n" % ("Dr7", self.Dr7, self.Dr7)
-        s += "%s: %s\n" % ("FloatSave", self.FloatSave.__str__())
+        s += "{}: {}\n".format("FloatSave", self.FloatSave.__str__())
         s += "%s: %x (%d)\n" % ("SegGs", self.SegGs, self.SegGs)
         s += "%s: %x (%d)\n" % ("SegFs", self.SegFs, self.SegFs)
         s += "%s: %x (%d)\n" % ("SegEs", self.SegEs, self.SegEs)
@@ -608,6 +608,6 @@ class WOW64_CONTEXT:
         s += "%s: %x (%d)\n" % ("EFlags", self.EFlags, self.EFlags)
         s += "%s: %x (%d)\n" % ("Esp", self.Esp, self.Esp)
         s += "%s: %x (%d)\n" % ("SegSs", self.SegSs, self.SegSs)
-        s += "%s: %s\n" % ("ExtendedRegisters", str(self.ExtendedRegisters))
+        s += "{}: {}\n".format("ExtendedRegisters", str(self.ExtendedRegisters))
 
         return s

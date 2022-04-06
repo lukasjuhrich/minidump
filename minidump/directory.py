@@ -62,5 +62,5 @@ class MINIDUMP_DIRECTORY:
         return md
 
     def __str__(self):
-        t = "StreamType: %s %s" % (self.StreamType, self.Location)
+        t = f"StreamType: {self.StreamType} {self.Location}"
         return t

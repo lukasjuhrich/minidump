@@ -73,7 +73,7 @@ class MinidumpModule:
         ]
 
     def __str__(self):
-        return "Module name: %s BaseAddress: 0x%08x Size: 0x%x Endaddress: 0x%08x" % (
+        return "Module name: {} BaseAddress: 0x{:08x} Size: 0x{:x} Endaddress: 0x{:08x}".format(
             self.name,
             self.baseaddress,
             self.size,
@@ -156,7 +156,7 @@ class VS_FIXEDFILEINFO:
     def __str__(self):
         t = ""
         for k in self.__dict__:
-            t += "%s : %s\r\n" % (k, str(self.__dict__[k]))
+            t += f"{k} : {str(self.__dict__[k])}\r\n"
         return t
 
 
@@ -225,7 +225,7 @@ class MINIDUMP_MODULE:
     def __str__(self):
         t = ""
         for k in self.__dict__:
-            t += "%s : %s\r\n" % (k, str(self.__dict__[k]))
+            t += f"{k} : {str(self.__dict__[k])}\r\n"
         return t
 
 

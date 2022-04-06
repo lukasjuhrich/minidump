@@ -100,7 +100,7 @@ def GetVersionExW():
     osi.dwOSVersionInfoSize = sizeof(osi)
     try:
         _GetVersionExW(byref(osi))
-    except WindowsError:
+    except OSError:
         osi = OSVERSIONINFOW()
         osi.dwOSVersionInfoSize = sizeof(osi)
         _GetVersionExW.argtypes = [POINTER(OSVERSIONINFOW)]

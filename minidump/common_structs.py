@@ -29,7 +29,7 @@ class MINIDUMP_LOCATION_DESCRIPTOR:
         return mld
 
     def __str__(self):
-        t = "Size: %s File offset: %s" % (self.DataSize, self.Rva)
+        t = f"Size: {self.DataSize} File offset: {self.Rva}"
         return t
 
 
@@ -54,7 +54,7 @@ class MINIDUMP_LOCATION_DESCRIPTOR64:
         return mld
 
     def __str__(self):
-        t = "Size: %s File offset: %s" % (self.DataSize, self.Rva)
+        t = f"Size: {self.DataSize} File offset: {self.Rva}"
         return t
 
 
@@ -252,23 +252,21 @@ class MinidumpMemorySegment:
 
     @staticmethod
     def get_header():
-        t = [
+        return [
             "VA Start",
             "RVA",
             "Size",
         ]
-        return t
 
     def to_row(self):
-        t = [
+        return [
             hex(self.start_virtual_address),
             hex(self.start_file_address),
             hex(self.size),
         ]
-        return t
 
     def __str__(self):
-        t = "VA Start: %s, RVA: %s, Size: %s" % (
+        t = "VA Start: {}, RVA: {}, Size: {}".format(
             hex(self.start_virtual_address),
             hex(self.start_file_address),
             hex(self.size),
