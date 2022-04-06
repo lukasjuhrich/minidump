@@ -1,113 +1,117 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 #
 # Author:
 #  Tamas Jos (@skelsec)
 #
 import io
+from dataclasses import dataclass
 from minidump.common_structs import *
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms680387(v=vs.85).aspx
+@dataclass
 class MINIDUMP_MEMORY64_LIST:
-    def __init__(self):
-        self.NumberOfMemoryRanges = None
-        self.BaseRva = None
-        self.MemoryRanges = []
+    NumberOfMemoryRanges: int
+    BaseRva: int
+    MemoryRanges: list[MINIDUMP_MEMORY_DESCRIPTOR64]
 
     def get_size(self):
         return (
-            8 + 8 + len(self.MemoryRanges) * MINIDUMP_MEMORY_DESCRIPTOR64().get_size()
+            8 + 8 + len(self.MemoryRanges) * MINIDUMP_MEMORY_DESCRIPTOR64.get_size()
         )
 
     def to_bytes(self):
-        t = len(self.MemoryRanges).to_bytes(8, byteorder="little", signed=False)
-        t += self.BaseRva.to_bytes(8, byteorder="little", signed=False)
-        for memrange in self.MemoryRanges:
-            t += memrange.to_bytes()
-        return t
+        return b"".join([
+            len(self.MemoryRanges).to_bytes(8, byteorder="little", signed=False),
+            self.BaseRva.to_bytes(8, byteorder="little", signed=False),
+            *(r.to_bytes() for r in self.MemoryRanges)
+        ])
 
-    @staticmethod
-    def parse(buff):
-        mml = MINIDUMP_MEMORY64_LIST()
-        mml.NumberOfMemoryRanges = int.from_bytes(
+    @classmethod
+    def parse(cls, buff):
+        NumberOfMemoryRanges = int.from_bytes(
             buff.read(8), byteorder="little", signed=False
         )
-        mml.BaseRva = int.from_bytes(buff.read(8), byteorder="little", signed=False)
-        for _ in range(mml.NumberOfMemoryRanges):
-            mml.MemoryRanges.append(MINIDUMP_MEMORY_DESCRIPTOR64.parse(buff))
 
-        return mml
+        return cls(
+            NumberOfMemoryRanges=NumberOfMemoryRanges,
+            BaseRva=int.from_bytes(buff.read(8), byteorder="little", signed=False),
+            MemoryRanges=[
+                MINIDUMP_MEMORY_DESCRIPTOR64.parse(buff)
+                for _ in range(NumberOfMemoryRanges)
+            ],
+        )
 
     def __str__(self):
-        t = "== MINIDUMP_MEMORY64_LIST ==\n"
-        t += "NumberOfMemoryRanges: %s\n" % self.NumberOfMemoryRanges
-        t += "BaseRva: %s\n" % self.BaseRva
-        for i in range(self.NumberOfMemoryRanges):
-            t += str(self.MemoryRanges[i]) + "\n"
-        return t
+        return "\n".join([
+            "== MINIDUMP_MEMORY64_LIST ==",
+            f"NumberOfMemoryRanges: {self.NumberOfMemoryRanges}",
+            f"BaseRva: {self.BaseRva}",
+            *(str(r) for r in self.MemoryRanges),
+        ])
 
 
 # https://msdn.microsoft.com/en-us/library/windows/desktop/ms680384(v=vs.85).aspx
+@dataclass
 class MINIDUMP_MEMORY_DESCRIPTOR64:
-    def __init__(self):
-        self.StartOfMemoryRange = None
-        self.DataSize = None
+    StartOfMemoryRange: int
+    DataSize: int
 
-    def get_size(self):
+    @staticmethod
+    def get_size():
         return 16
 
     def to_bytes(self):
-        t = self.StartOfMemoryRange.to_bytes(8, byteorder="little", signed=False)
-        t += self.DataSize.to_bytes(8, byteorder="little", signed=False)
-        return t
+        return b"".join([
+            self.StartOfMemoryRange.to_bytes(8, byteorder="little", signed=False),
+            self.DataSize.to_bytes(8, byteorder="little", signed=False),
+        ])
 
-    @staticmethod
-    def parse(buff):
-        md = MINIDUMP_MEMORY_DESCRIPTOR64()
-        md.StartOfMemoryRange = int.from_bytes(
-            buff.read(8), byteorder="little", signed=False
+    @classmethod
+    def parse(cls, buff):
+        return cls(
+            StartOfMemoryRange=int.from_bytes(
+                buff.read(8), byteorder="little", signed=False
+            ),
+            DataSize=int.from_bytes(buff.read(8), byteorder="little", signed=False),
         )
-        md.DataSize = int.from_bytes(buff.read(8), byteorder="little", signed=False)
-        return md
 
     def __str__(self):
-        t = "Start: %s" % hex(self.StartOfMemoryRange)
-        t += "Size: %s" % self.DataSize
-        return t
+        return f"Start: 0x{self.StartOfMemoryRange:x} Size: {self.DataSize}"
 
 
+@dataclass(repr=False)
 class MinidumpMemory64List:
-    def __init__(self):
-        self.memory_segments = []
+    memory_segments: list[MinidumpMemorySegment]
 
-    @staticmethod
-    def parse(dir, buff):
+    @classmethod
+    def parse(cls, dir, buff):
         buff.seek(dir.Location.Rva)
-        chunk_data = buff.read(dir.Location.DataSize)
-        return MinidumpMemory64List.from_chunk_data(chunk_data)
+        return cls.from_chunk_data(buff.read(dir.Location.DataSize))
 
-    @staticmethod
-    async def aparse(dir, buff):
+    @classmethod
+    async def aparse(cls, dir, buff):
         await buff.seek(dir.Location.Rva)
-        chunk_data = await buff.read(dir.Location.DataSize)
-        return MinidumpMemory64List.from_chunk_data(chunk_data)
+        return cls.from_chunk_data(await buff.read(dir.Location.DataSize))
 
     @classmethod
     def from_chunk_data(cls, chunk_data):
-        t = cls()
-        chunk = io.BytesIO(chunk_data)
-        mtl = MINIDUMP_MEMORY64_LIST.parse(chunk)
+        mtl = MINIDUMP_MEMORY64_LIST.parse(io.BytesIO(chunk_data))
         rva = mtl.BaseRva
+        memory_segments = []
         for mod in mtl.MemoryRanges:
-            t.memory_segments.append(MinidumpMemorySegment.parse_full(mod, rva))
+            memory_segments.append(MinidumpMemorySegment.parse_full(mod, rva))
             rva += mod.DataSize
-        return t
+        return cls(memory_segments=memory_segments)
 
     def to_table(self):
-        t = []
-        t.append(MinidumpMemorySegment.get_header())
-        for mod in self.memory_segments:
-            t.append(mod.to_row())
-        return t
+        return [
+            MinidumpMemorySegment.get_header(),
+            *(mod.to_row() for mod in self.memory_segments)
+        ]
 
     def __str__(self):
         return "== MinidumpMemory64List ==\n" + construct_table(self.to_table())
+
+    def __repr__(self):
+        return f"<{type(self).__name__} ({len(self.memory_segments)} segments)>"
