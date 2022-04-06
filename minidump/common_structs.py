@@ -1,128 +1,128 @@
-# https://msdn.microsoft.com/en-us/library/windows/desktop/ms680383(v=vs.85).aspx
-class MINIDUMP_LOCATION_DESCRIPTOR:
-    def __init__(self):
-        self.DataSize = None
-        self.Rva = None
+from __future__ import annotations
 
-    def get_size(self):
+import typing
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms680383(v=vs.85).aspx
+from dataclasses import dataclass, field
+if typing.TYPE_CHECKING:
+    from minidump.streams import MINIDUMP_MEMORY_DESCRIPTOR
+
+
+@dataclass
+class MINIDUMP_LOCATION_DESCRIPTOR:
+    DataSize: int
+    Rva: int
+
+    @staticmethod
+    def get_size():
         return 8
 
     def to_bytes(self):
-        t = self.DataSize.to_bytes(4, byteorder="little", signed=False)
-        t += self.Rva.to_bytes(4, byteorder="little", signed=False)
-        return t
+        return self.DataSize.to_bytes(4, byteorder="little", signed=False) \
+            + self.Rva.to_bytes(4, byteorder="little", signed=False)
 
-    @staticmethod
-    def parse(buff):
-        mld = MINIDUMP_LOCATION_DESCRIPTOR()
-        mld.DataSize = int.from_bytes(buff.read(4), byteorder="little", signed=False)
-        mld.Rva = int.from_bytes(buff.read(4), byteorder="little", signed=False)
-        return mld
+    @classmethod
+    def parse(cls, buff):
+        return cls(
+            DataSize=int.from_bytes(buff.read(4), byteorder="little", signed=False),
+            Rva=int.from_bytes(buff.read(4), byteorder="little", signed=False),
+        )
 
-    @staticmethod
-    async def aparse(buff):
-        mld = MINIDUMP_LOCATION_DESCRIPTOR()
-        t = await buff.read(4)
-        mld.DataSize = int.from_bytes(t, byteorder="little", signed=False)
-        t = await buff.read(4)
-        mld.Rva = int.from_bytes(t, byteorder="little", signed=False)
-        return mld
+    @classmethod
+    async def aparse(cls, buff):
+        return cls(
+            DataSize=int.from_bytes(await buff.read(4), byteorder="little", signed=False),
+            Rva=int.from_bytes(await buff.read(4), byteorder="little", signed=False),
+        )
 
     def __str__(self):
-        t = f"Size: {self.DataSize} File offset: {self.Rva}"
-        return t
+        return f"Size: {self.DataSize} File offset: {self.Rva}"
 
 
+@dataclass
 class MINIDUMP_LOCATION_DESCRIPTOR64:
-    def __init__(self):
-        self.DataSize = None
-        self.Rva = None
+    DataSize: int
+    Rva: int
 
-    def get_size(self):
+    @staticmethod
+    def get_size():
         return 16
 
     def to_bytes(self):
-        t = self.DataSize.to_bytes(8, byteorder="little", signed=False)
-        t += self.Rva.to_bytes(8, byteorder="little", signed=False)
-        return t
+        return self.DataSize.to_bytes(8, byteorder="little", signed=False) \
+            + self.Rva.to_bytes(8, byteorder="little", signed=False)
 
-    @staticmethod
-    def parse(buff):
-        mld = MINIDUMP_LOCATION_DESCRIPTOR64()
-        mld.DataSize = int.from_bytes(buff.read(8), byteorder="little", signed=False)
-        mld.Rva = int.from_bytes(buff.read(8), byteorder="little", signed=False)
-        return mld
+    @classmethod
+    def parse(cls, buff):
+        return cls(
+            DataSize=int.from_bytes(buff.read(8), byteorder="little", signed=False),
+            Rva=int.from_bytes(buff.read(8), byteorder="little", signed=False),
+        )
 
     def __str__(self):
-        t = f"Size: {self.DataSize} File offset: {self.Rva}"
-        return t
+        return f"Size: {self.DataSize} File offset: {self.Rva}"
 
 
+@dataclass
 class MINIDUMP_STRING:
-    def __init__(self):
-        self.Length = None
-        self.Buffer = None
+    Length: int
+    Buffer: bytes
 
-    @staticmethod
-    def parse(buff):
-        ms = MINIDUMP_STRING()
-        ms.Length = int.from_bytes(buff.read(4), byteorder="little", signed=False)
-        ms.Buffer = buff.read(ms.Length)
-        return ms
+    @classmethod
+    def parse(cls, buff):
+        length = int.from_bytes(buff.read(4), byteorder="little", signed=False)
+        return cls(Length=length, Buffer=buff.read(length))
 
-    @staticmethod
-    async def aparse(buff):
-        ms = MINIDUMP_STRING()
-        t = await buff.read(4)
-        ms.Length = int.from_bytes(t, byteorder="little", signed=False)
-        ms.Buffer = await buff.read(ms.Length)
-        return ms
+    @classmethod
+    async def aparse(cls, buff):
+        length = int.from_bytes(await buff.read(4), byteorder="little", signed=False)
+        return cls(Length=length, Buffer=await buff.read(length))
 
-    @staticmethod
-    def get_from_rva(rva, buff):
+    @classmethod
+    def get_from_rva(cls, rva, buff) -> str:
         pos = buff.tell()
         buff.seek(rva, 0)
-        ms = MINIDUMP_STRING.parse(buff)
+        ms = cls.parse(buff)
         buff.seek(pos, 0)
         return ms.Buffer.decode("utf-16-le")
 
-    @staticmethod
-    async def aget_from_rva(rva, buff):
+    @classmethod
+    async def aget_from_rva(cls, rva, buff) -> str:
         pos = buff.tell()
         await buff.seek(rva, 0)
-        ms = await MINIDUMP_STRING.aparse(buff)
+        ms = await cls.aparse(buff)
         await buff.seek(pos, 0)
         return ms.Buffer.decode("utf-16-le")
 
 
+@dataclass
 class MinidumpMemorySegment:
-    def __init__(self):
-        self.start_virtual_address = None
-        self.size = None
-        self.end_virtual_address = None
-        self.start_file_address = None
+    size: int
+    start_file_address: int
+    start_virtual_address: int
+    end_virtual_address: int = field(init=False)
 
-    @staticmethod
-    def parse_mini(memory_decriptor, buff):
+    def __post_init__(self):
+        self.end_virtual_address = self.start_virtual_address + self.size
+
+    @classmethod
+    def parse_mini(cls, memory_decriptor: MINIDUMP_MEMORY_DESCRIPTOR, buff):
         """
         memory_descriptor: MINIDUMP_MEMORY_DESCRIPTOR
         buff: file_handle
         """
-        mms = MinidumpMemorySegment()
-        mms.start_virtual_address = memory_decriptor.StartOfMemoryRange
-        mms.size = memory_decriptor.DataSize
-        mms.start_file_address = memory_decriptor.Rva
-        mms.end_virtual_address = mms.start_virtual_address + mms.size
-        return mms
+        return cls(
+            size=memory_decriptor.DataSize,
+            start_virtual_address=memory_decriptor.StartOfMemoryRange,
+            start_file_address=memory_decriptor.Rva,
+        )
 
-    @staticmethod
-    def parse_full(memory_decriptor, rva):
-        mms = MinidumpMemorySegment()
-        mms.start_virtual_address = memory_decriptor.StartOfMemoryRange
-        mms.size = memory_decriptor.DataSize
-        mms.start_file_address = rva
-        mms.end_virtual_address = mms.start_virtual_address + mms.size
-        return mms
+    @classmethod
+    def parse_full(cls, memory_decriptor, rva):
+        return cls(
+            size=memory_decriptor.DataSize,
+            start_file_address=rva,
+            start_virtual_address=memory_decriptor.StartOfMemoryRange,
+        )
 
     def inrange(self, virt_addr):
         return self.start_virtual_address <= virt_addr < self.end_virtual_address
