@@ -371,7 +371,7 @@ class AMinidumpFileReader:
                     find_first=find_first,
                     chunksize=chunksize,
                 )
-                if len(needles) > 0 and find_first is True:
+                if needles and find_first:
                     return needles
 
         return needles

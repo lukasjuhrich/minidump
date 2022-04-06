@@ -160,7 +160,7 @@ class MinidumpMemorySegment:
         pos = file_handler.tell()
         file_handler.seek(self.start_file_address, 0)
         fl = []
-        if find_first is True:
+        if find_first:
             chunksize = min(chunksize, self.size)
             data = b""
             i = 0
@@ -189,7 +189,7 @@ class MinidumpMemorySegment:
                 fl.append(marker + offset + self.start_virtual_address)
                 data = data[marker + 1 :]
                 offset += marker + 1
-                if find_first is True:
+                if find_first:
                     return fl
 
         file_handler.seek(pos, 0)
@@ -204,7 +204,7 @@ class MinidumpMemorySegment:
         await file_handler.seek(self.start_file_address, 0)
         fl = []
 
-        if find_first is True:
+        if find_first:
             chunksize = min(chunksize, self.size)
             data = b""
             i = 0
@@ -232,7 +232,7 @@ class MinidumpMemorySegment:
                 fl.append(marker + offset + self.start_virtual_address)
                 data = data[marker + 1 :]
                 offset += marker + 1
-                if find_first is True:
+                if find_first:
                     return fl
 
         await file_handler.seek(pos, 0)
