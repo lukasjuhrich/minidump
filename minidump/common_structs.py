@@ -254,12 +254,11 @@ class MinidumpMemorySegment:
         ]
 
     def __str__(self):
-        t = "VA Start: {}, RVA: {}, Size: {}".format(
-            hex(self.start_virtual_address),
-            hex(self.start_file_address),
-            hex(self.size),
-        )
-        return t
+        return ", ".join([
+            f"VA Start: 0x{self.start_virtual_address:x}",
+            f"RVA: 0x{self.start_file_address:x}",
+            f"Size: 0x{self.size:x}",
+        ])
 
 
 def hexdump(src, length=16, sep=".", start=0):
