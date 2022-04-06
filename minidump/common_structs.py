@@ -125,22 +125,17 @@ class MinidumpMemorySegment:
         return mms
 
     def inrange(self, virt_addr):
-        if (
-            virt_addr >= self.start_virtual_address
-            and virt_addr < self.end_virtual_address
-        ):
-            return True
-        return False
+        return self.start_virtual_address <= virt_addr < self.end_virtual_address
 
-    def read(self, virtual_address, size, file_handler):
-        if (
-            virtual_address > self.end_virtual_address
-            or virtual_address < self.start_virtual_address
-        ):
+    def validate_address(self, virtual_address, size):
+        if not self.start_virtual_address <= virtual_address <= self.end_virtual_address:
             raise Exception("Reading from wrong segment!")
 
         if virtual_address + size > self.end_virtual_address:
             raise Exception("Read would cross boundaries!")
+
+    def read(self, virtual_address, size, file_handler):
+        self.validate_address(virtual_address, size)
 
         pos = file_handler.tell()
         offset = virtual_address - self.start_virtual_address
@@ -150,14 +145,7 @@ class MinidumpMemorySegment:
         return data
 
     async def aread(self, virtual_address, size, file_handler):
-        if (
-            virtual_address > self.end_virtual_address
-            or virtual_address < self.start_virtual_address
-        ):
-            raise Exception("Reading from wrong segment!")
-
-        if virtual_address + size > self.end_virtual_address:
-            raise Exception("Read would cross boundaries!")
+        self.validate_address(virtual_address, size)
 
         pos = file_handler.tell()
         offset = virtual_address - self.start_virtual_address
