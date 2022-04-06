@@ -267,22 +267,14 @@ def hexdump(src, length=16, sep=".", start=0):
     @param[in] length	{Int} Nb Bytes by row.
     @param[in] sep		{Char} For the text part, {sep} will be used for non ASCII char.
     @return {Str} The hexdump
-
-    @note Full support for python2 and python3 !
     """
     result = []
 
-    # Python3 support
-    try:
-        xrange(0, 1)
-    except NameError:
-        xrange = range
-
-    for i in xrange(0, len(src), length):
-        subSrc = src[i : i + length]
+    for i in range(0, len(src), length):
+        subSrc = src[i: i + length]
         hexa = ""
         isMiddle = False
-        for h in xrange(0, len(subSrc)):
+        for h in range(0, len(subSrc)):
             if h == length / 2:
                 hexa += " "
             h = subSrc[h]

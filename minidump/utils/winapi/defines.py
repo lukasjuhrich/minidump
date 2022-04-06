@@ -267,12 +267,12 @@ class GuessStringType:
             # convert all ANSI strings to Unicode
             if t_ansi in v_types:
                 argv = list(argv)
-                for index in xrange(len(argv)):
+                for index in range(len(argv)):
                     if v_types[index] == t_ansi:
-                        argv[index] = unicode(argv[index])
+                        argv[index] = str(argv[index])
                 for (key, value) in argd.items():
                     if type(value) == t_ansi:
-                        argd[key] = unicode(value)
+                        argd[key] = str(value)
 
             # Use the W version
             fn = self.fn_unicode
