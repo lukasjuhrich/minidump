@@ -81,29 +81,26 @@ class MinidumpMemory64List:
 
     @staticmethod
     def parse(dir, buff):
-        t = MinidumpMemory64List()
         buff.seek(dir.Location.Rva)
-        chunk = io.BytesIO(buff.read(dir.Location.DataSize))
+        chunk_data = buff.read(dir.Location.DataSize)
+        return MinidumpMemory64List.from_chunk_data(chunk_data)
+
+    @staticmethod
+    async def aparse(dir, buff):
+        await buff.seek(dir.Location.Rva)
+        chunk_data = await buff.read(dir.Location.DataSize)
+        return MinidumpMemory64List.from_chunk_data(chunk_data)
+
+    @classmethod
+    def from_chunk_data(cls, chunk_data):
+        t = cls()
+        chunk = io.BytesIO(chunk_data)
         mtl = MINIDUMP_MEMORY64_LIST.parse(chunk)
         rva = mtl.BaseRva
         for mod in mtl.MemoryRanges:
             t.memory_segments.append(MinidumpMemorySegment.parse_full(mod, rva))
             rva += mod.DataSize
         return t
-
-    @staticmethod
-    async def aparse(dir, buff):
-        mml = MinidumpMemory64List()
-        await buff.seek(dir.Location.Rva)
-        chunk_data = await buff.read(dir.Location.DataSize)
-        chunk = io.BytesIO(chunk_data)
-        mtl = MINIDUMP_MEMORY64_LIST.parse(chunk)
-        rva = mtl.BaseRva
-        for mod in mtl.MemoryRanges:
-            ms = MinidumpMemorySegment.parse_full(mod, rva)
-            mml.memory_segments.append(ms)
-            rva += mod.DataSize
-        return mml
 
     def to_table(self):
         t = []
